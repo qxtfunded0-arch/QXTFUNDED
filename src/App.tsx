@@ -260,7 +260,7 @@ export default function App() {
            <button onClick={() => { setCurrentPage('dashboard'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Dashboard</button>
            <button onClick={() => { setCurrentPage('faq'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">FAQ</button>
            <button onClick={() => { setCurrentPage('privacy'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Legal</button>
-           {!user && <Button onClick={handlePasskeySignUp} className="mt-4">Trader Portal</Button>}
+           {!user && <Button onClick={() => { setCurrentPage('auth'); setIsMenuOpen(false); }} className="mt-4">Trader Portal</Button>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -282,7 +282,7 @@ export default function App() {
           </div>
         </div>
         {!user && (
-          <Button variant="outline" onClick={handlePasskeySignUp} className="px-3 py-1.5 md:px-4 md:py-2 h-auto text-[10px] md:text-xs whitespace-nowrap">
+          <Button variant="outline" onClick={() => setCurrentPage('auth')} className="px-3 py-1.5 md:px-4 md:py-2 h-auto text-[10px] md:text-xs whitespace-nowrap">
             Sign in
           </Button>
         )}
