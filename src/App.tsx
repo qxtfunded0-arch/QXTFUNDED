@@ -121,12 +121,22 @@ const Notification = ({ message, onClose }: { message: string; onClose: () => vo
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'welcome' | 'models' | 'brokers' | 'pricing' | 'checkout' | 'dashboard' | 'success' | 'privacy' | 'faq' | 'auth'>('welcome');
   const [user, setUser] = useState<{ email: string; fullName: string } | null>(() => {
-    const saved = localStorage.getItem('qxt_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('qxt_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error("Error loading user from localStorage", e);
+      return null;
+    }
   });
   const [purchasedAccounts, setPurchasedAccounts] = useState<{tier: AccountTier, status: 'Pending' | 'Active'}[]>(() => {
-    const saved = localStorage.getItem('qxt_accounts');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('qxt_accounts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error loading accounts from localStorage", e);
+      return [];
+    }
   });
   const [selectedModel, setSelectedModel] = useState<'challenge' | 'instant' | null>(null);
   const [selectedTier, setSelectedTier] = useState<AccountTier | null>(null);
@@ -318,33 +328,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-brand-primary/30 flex relative bg-[#050505]">
-      {/* Immersive Star Field Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.03),transparent_70%)]" />
-        <div className="absolute inset-0">
-          {[...Array(100)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: Math.random() * 0.3 }}
-              animate={{ opacity: [0.1, 0.4, 0.1] }}
-              transition={{
-                duration: Math.random() * 5 + 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute rounded-full bg-slate-200"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                width: `${Math.random() * 1.2 + 0.5}px`,
-                height: `${Math.random() * 1.2 + 0.5}px`,
-                boxShadow: Math.random() > 0.95 ? '0 0 3px 0.5px rgba(255,255,255,0.1)' : 'none',
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
       <Sidebar />
       <MobileNav />
       
