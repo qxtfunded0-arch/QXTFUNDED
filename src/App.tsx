@@ -120,8 +120,14 @@ const Notification = ({ message, onClose }: { message: string; onClose: () => vo
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'welcome' | 'models' | 'brokers' | 'pricing' | 'checkout' | 'dashboard' | 'success' | 'privacy' | 'faq' | 'auth'>('welcome');
-  const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
-  const [purchasedAccounts, setPurchasedAccounts] = useState<{tier: AccountTier, status: 'Pending' | 'Active'}[]>([]);
+  const [user, setUser] = useState<{ email: string; fullName: string } | null>(() => {
+    const saved = localStorage.getItem('qxt_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [purchasedAccounts, setPurchasedAccounts] = useState<{tier: AccountTier, status: 'Pending' | 'Active'}[]>(() => {
+    const saved = localStorage.getItem('qxt_accounts');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [selectedModel, setSelectedModel] = useState<'challenge' | 'instant' | null>(null);
   const [selectedTier, setSelectedTier] = useState<AccountTier | null>(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
@@ -135,10 +141,17 @@ export default function App() {
 
   const [postAuthDestination, setPostAuthDestination] = useState<string | null>(null);
 
-  // Simulated notifications have been removed as per user request
   useEffect(() => {
-    // No-op
-  }, []);
+    if (user) {
+      localStorage.setItem('qxt_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('qxt_user');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('qxt_accounts', JSON.stringify(purchasedAccounts));
+  }, [purchasedAccounts]);
 
   const handlePasskeySignUp = () => {
     if (!authEmail || !termsAccepted) return;
@@ -149,7 +162,8 @@ export default function App() {
       setIsAuthLoading(false);
       setIsAuthSuccess(true);
       setTimeout(() => {
-        setUser({ email: authEmail, fullName: authEmail.split('@')[0] });
+        const newUser = { email: authEmail, fullName: authEmail.split('@')[0] };
+        setUser(newUser);
         if (postAuthDestination === 'brokers' && selectedTier) {
           setCurrentPage('brokers');
           setPostAuthDestination(null);
@@ -259,8 +273,9 @@ export default function App() {
            <button onClick={() => { setCurrentPage('models'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Programs</button>
            <button onClick={() => { setCurrentPage('dashboard'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Dashboard</button>
            <button onClick={() => { setCurrentPage('faq'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">FAQ</button>
-           <button onClick={() => { setCurrentPage('privacy'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Legal</button>
-           {!user && <Button onClick={() => { setCurrentPage('auth'); setIsMenuOpen(false); }} className="mt-4">Trader Portal</Button>}
+            <button onClick={() => { setCurrentPage('privacy'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Legal</button>
+
+            {!user && <Button onClick={() => { setCurrentPage('auth'); setIsMenuOpen(false); }} className="mt-4">Trader Portal</Button>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -302,7 +317,34 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen selection:bg-brand-primary/30 flex">
+    <div className="min-h-screen selection:bg-brand-primary/30 flex relative bg-[#050505]">
+      {/* Immersive Star Field Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.03),transparent_70%)]" />
+        <div className="absolute inset-0">
+          {[...Array(100)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: Math.random() * 0.3 }}
+              animate={{ opacity: [0.1, 0.4, 0.1] }}
+              transition={{
+                duration: Math.random() * 5 + 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute rounded-full bg-slate-200"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 1.2 + 0.5}px`,
+                height: `${Math.random() * 1.2 + 0.5}px`,
+                boxShadow: Math.random() > 0.95 ? '0 0 3px 0.5px rgba(255,255,255,0.1)' : 'none',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       <Sidebar />
       <MobileNav />
       
@@ -318,7 +360,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               key="welcome"
-              className="p-6 md:p-20 flex flex-col items-center text-center"
+              className="p-6 md:p-20 flex flex-col items-center text-center min-h-[80vh] justify-center"
             >
               <div className="max-w-3xl">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary mb-6 block">Elite Prop Trading</span>
@@ -331,12 +373,12 @@ export default function App() {
                   Access institutional liquidity. Trade Binary Options with professional backings.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button onClick={() => setCurrentPage('models')} className="h-14 px-10 uppercase tracking-widest text-xs">Start Evaluation</Button>
-                  {!user && <Button variant="secondary" onClick={() => setCurrentPage('auth')} className="h-14 px-10 uppercase tracking-widest text-xs">Trader Login</Button>}
+                  <Button onClick={() => setCurrentPage('models')} className="h-14 px-10 uppercase tracking-widest text-xs font-black">Start Evaluation</Button>
+                  {!user && <Button variant="secondary" onClick={() => setCurrentPage('auth')} className="h-14 px-10 uppercase tracking-widest text-xs font-black">Trader Login</Button>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-24 w-full max-w-4xl">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mt-24 w-full max-w-4xl">
                 {[
                   { label: 'Payouts', value: '$84M' },
                   { label: 'Network', value: '52K' },
