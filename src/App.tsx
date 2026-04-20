@@ -121,7 +121,7 @@ const Notification = ({ message, onClose }: { message: string; onClose: () => vo
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'welcome' | 'models' | 'brokers' | 'pricing' | 'checkout' | 'dashboard' | 'success' | 'privacy' | 'faq' | 'auth'>('welcome');
   const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
-  const [purchasedAccounts, setPurchasedAccounts] = useState<AccountTier[]>([]);
+  const [purchasedAccounts, setPurchasedAccounts] = useState<{tier: AccountTier, status: 'Pending' | 'Active'}[]>([]);
   const [selectedModel, setSelectedModel] = useState<'challenge' | 'instant' | null>(null);
   const [selectedTier, setSelectedTier] = useState<AccountTier | null>(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
@@ -190,9 +190,9 @@ export default function App() {
   const handlePaymentConfirm = () => {
     setCheckoutStep(3);
     setTimeout(() => {
-      // Add the account to purchased list only after verification
+      // Add the account as 'Pending' immediately after purchase
       if (selectedTier) {
-        setPurchasedAccounts(prev => [...prev, selectedTier]);
+        setPurchasedAccounts(prev => [...prev, { tier: selectedTier, status: 'Pending' }]);
       }
       setCurrentPage('success');
     }, 2000);
@@ -903,14 +903,14 @@ export default function App() {
                         <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Combined Balance</span>
                         <BarChart3 className="w-4 h-4 text-brand-primary" />
                       </div>
-                      <div className="text-2xl md:text-3xl font-black text-white italic leading-none">{formatCurrency(purchasedAccounts.reduce((acc, curr) => acc + curr.size, 0))}</div>
+                      <div className="text-2xl md:text-3xl font-black text-white italic leading-none">{formatCurrency(purchasedAccounts.reduce((acc, curr) => acc + curr.tier.size, 0))}</div>
                     </Card>
                     <Card className="p-5 md:p-6 border-emerald-500/20">
                       <div className="flex justify-between items-center mb-3 md:mb-4">
                         <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Active Accounts</span>
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
                       </div>
-                      <div className="text-2xl md:text-3xl font-black text-white italic leading-none">{purchasedAccounts.length}</div>
+                      <div className="text-2xl md:text-3xl font-black text-white italic leading-none">{purchasedAccounts.filter(a => a.status === 'Active').length}</div>
                     </Card>
                     <Card className="p-5 md:p-6">
                       <div className="flex justify-between items-center mb-3 md:mb-4">
@@ -925,7 +925,9 @@ export default function App() {
                     <div className="flex justify-between items-center px-2">
                        <h4 className="text-xs font-bold text-white uppercase italic tracking-widest">Portfolio Tracking</h4>
                     </div>
-                    <div className="overflow-x-auto border border-border-subtle rounded-2xl bg-card-bg">
+                    
+                    {/* Desktop View Table */}
+                    <div className="hidden md:block overflow-x-auto border border-border-subtle rounded-2xl bg-card-bg">
                       <table className="w-full text-left text-xs uppercase font-bold tracking-tighter">
                         <thead>
                           <tr className="border-b border-border-subtle bg-white/[0.02]">
@@ -941,18 +943,55 @@ export default function App() {
                             <tr key={i} className="border-b border-border-subtle/50 hover:bg-white/[0.01] transition-colors">
                               <td className="px-6 py-5">
                                 <div className="flex items-center gap-2">
-                                  {account.id.includes('instant') ? <Zap className="w-3 h-3 text-emerald-500" /> : <Trophy className="w-3 h-3 text-brand-primary" />}
-                                  <span>{account.id.includes('instant') ? 'Instant' : 'Challenge'}</span>
+                                  {account.tier.id.includes('instant') ? <Zap className="w-3 h-3 text-emerald-500" /> : <Trophy className="w-3 h-3 text-brand-primary" />}
+                                  <span>{account.tier.id.includes('instant') ? 'Instant' : 'Challenge'}</span>
                                 </div>
                               </td>
-                              <td className="px-6 py-5 text-white">{formatCurrency(account.size)}</td>
-                              <td className="px-6 py-5 text-emerald-500">Live Trade</td>
+                              <td className="px-6 py-5 text-white">{formatCurrency(account.tier.size)}</td>
+                              <td className={cn("px-6 py-5", account.status === 'Active' ? 'text-emerald-500' : 'text-amber-500')}>
+                                {account.status === 'Active' ? 'Live Trade' : 'Evaluation Pending'}
+                              </td>
                               <td className="px-6 py-5 text-rose-500">None</td>
                               <td className="px-6 py-5 underline uppercase tracking-widest cursor-pointer hover:text-white">Credentials</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Mobile View Cards */}
+                    <div className="md:hidden space-y-3">
+                      {purchasedAccounts.map((account, i) => (
+                        <Card key={i} className="p-4 border-white/5 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              {account.tier.id.includes('instant') ? <Zap className="w-3 h-3 text-emerald-500" /> : <Trophy className="w-3 h-3 text-brand-primary" />}
+                              <span className="text-[10px] font-black text-white tracking-widest">
+                                {account.tier.id.includes('instant') ? 'INSTANT FUNDING' : 'CHALLENGE EVAL'}
+                              </span>
+                            </div>
+                            <span className={cn(
+                              "text-[8px] font-black px-2 py-1 rounded border",
+                              account.status === 'Active' ? "border-emerald-500/20 text-emerald-500 bg-emerald-500/5" : "border-amber-500/20 text-amber-500 bg-amber-500/5"
+                            )}>
+                              {account.status === 'Active' ? 'LIVE' : 'PENDING'}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-[8px] text-text-muted font-bold uppercase tracking-widest mb-1">Account Size</p>
+                              <p className="text-sm font-black text-white italic">{formatCurrency(account.tier.size)}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[8px] text-text-muted font-bold uppercase tracking-widest mb-1">Max Drawdown</p>
+                              <p className="text-sm font-black text-rose-500 italic">None</p>
+                            </div>
+                          </div>
+
+                          <Button variant="outline" className="w-full h-10 text-[10px] uppercase font-black">Account Credentials</Button>
+                        </Card>
+                      ))}
                     </div>
                   </div>
                 </>
