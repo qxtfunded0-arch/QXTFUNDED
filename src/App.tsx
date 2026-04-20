@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart3, 
   ChevronRight, 
@@ -97,12 +96,7 @@ const Card = ({ children, className, ...props }: React.HTMLAttributes<HTMLDivEle
 );
 
 const Notification = ({ message, onClose }: { message: string; onClose: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 50, x: 20 }}
-    animate={{ opacity: 1, y: 0, x: 0 }}
-    exit={{ opacity: 0, y: 20, x: 20 }}
-    className="fixed bottom-6 right-6 z-50 glass-morphism rounded-xl p-4 shadow-2xl flex items-center gap-4 max-w-sm"
-  >
+  <div className="fixed bottom-6 right-6 z-50 glass-morphism rounded-xl p-4 shadow-2xl flex items-center gap-4 max-w-sm">
     <div className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center">
       <Bell className="w-5 h-5 text-white" />
     </div>
@@ -113,7 +107,7 @@ const Notification = ({ message, onClose }: { message: string; onClose: () => vo
     <button onClick={onClose} className="text-slate-500 hover:text-white">
       <X className="w-4 h-4" />
     </button>
-  </motion.div>
+  </div>
 );
 
 // --- Pages ---
@@ -152,15 +146,23 @@ export default function App() {
   const [postAuthDestination, setPostAuthDestination] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('qxt_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('qxt_user');
+    try {
+      if (user) {
+        localStorage.setItem('qxt_user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('qxt_user');
+      }
+    } catch (e) {
+      console.error("Error saving user to localStorage", e);
     }
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('qxt_accounts', JSON.stringify(purchasedAccounts));
+    try {
+      localStorage.setItem('qxt_accounts', JSON.stringify(purchasedAccounts));
+    } catch (e) {
+      console.error("Error saving accounts to localStorage", e);
+    }
   }, [purchasedAccounts]);
 
   const handlePasskeySignUp = () => {
@@ -271,31 +273,24 @@ export default function App() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border-subtle bg-brand-secondary px-6 py-6 flex flex-col gap-4"
-          >
-           <button onClick={() => { setCurrentPage('welcome'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Home</button>
-           <button onClick={() => { setCurrentPage('models'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Programs</button>
-           <button onClick={() => { setCurrentPage('dashboard'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Dashboard</button>
-           <button onClick={() => { setCurrentPage('faq'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">FAQ</button>
-            <button onClick={() => { setCurrentPage('privacy'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest">Legal</button>
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-border-subtle bg-brand-secondary px-6 py-6 flex flex-col gap-4">
+          <button onClick={() => { setCurrentPage('welcome'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest text-left">Home</button>
+          <button onClick={() => { setCurrentPage('models'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest text-left">Programs</button>
+          <button onClick={() => { setCurrentPage('dashboard'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest text-left">Dashboard</button>
+          <button onClick={() => { setCurrentPage('faq'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest text-left">FAQ</button>
+          <button onClick={() => { setCurrentPage('privacy'); setIsMenuOpen(false); }} className="text-sm font-medium text-text-muted uppercase font-bold tracking-widest text-left">Legal</button>
 
-            {!user && <Button onClick={() => { setCurrentPage('auth'); setIsMenuOpen(false); }} className="mt-4">Trader Portal</Button>}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {!user && <Button onClick={() => { setCurrentPage('auth'); setIsMenuOpen(false); }} className="mt-4">Trader Portal</Button>}
+        </div>
+      )}
     </nav>
   );
 
   const Header = () => (
     <header className="px-6 py-5 md:px-10 md:py-6 border-b border-border-subtle flex justify-between items-center bg-brand-secondary h-16 md:h-auto">
       <div>
-        <h1 className="text-sm md:text-lg font-bold text-white mb-0.5">{user ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome'}</h1>
+        <h1 className="text-sm md:text-lg font-bold text-white mb-0.5">{user ? `Hi, ${user.fullName?.split(' ')[0] || 'Trader'}` : 'Welcome'}</h1>
         <p className="text-[10px] md:text-xs text-text-muted uppercase tracking-wider font-semibold">Official Platform</p>
       </div>
       <div className="flex items-center gap-4 md:gap-6">
@@ -335,16 +330,9 @@ export default function App() {
         <Header />
         
         <main className="flex-1 overflow-y-auto mt-16 md:mt-0">
-          <AnimatePresence mode="wait">
           {/* --- Welcome Page --- */}
           {currentPage === 'welcome' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              key="welcome"
-              className="p-6 md:p-20 flex flex-col items-center text-center min-h-[80vh] justify-center"
-            >
+            <div className="p-6 md:p-20 flex flex-col items-center text-center min-h-[80vh] justify-center">
               <div className="max-w-3xl">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary mb-6 block">Elite Prop Trading</span>
                 <h2 className="text-4xl md:text-7xl font-bold text-white mb-6 leading-[0.9] uppercase italic tracking-tighter">
@@ -374,17 +362,12 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Model Selection --- */}
           {currentPage === 'models' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="p-4 md:p-10 max-w-5xl mx-auto"
-            >
+            <div className="p-4 md:p-10 max-w-5xl mx-auto">
               <div className="text-center mb-12">
                 <h3 className="text-2xl font-bold text-white uppercase italic tracking-tighter mb-2">Select Your Path</h3>
                 <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">CHOOSE BETWEEN STRUCTURED CHALLENGE OR INSTANT FUNDING</p>
@@ -431,17 +414,12 @@ export default function App() {
                   </div>
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Broker Selection --- */}
           {currentPage === 'brokers' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="p-4 md:p-10 max-w-4xl mx-auto"
-            >
+            <div className="p-4 md:p-10 max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h3 className="text-2xl md:text-4xl font-bold text-white uppercase italic tracking-tighter mb-2">Partner Broker</h3>
                 <p className="text-text-muted text-xs uppercase font-bold tracking-widest">Select your preferred execution platform</p>
@@ -477,18 +455,12 @@ export default function App() {
                   <ChevronLeft className="w-3 h-3" /> Change Model
                 </Button>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Pricing Page --- */}
           {currentPage === 'pricing' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              key="pricing"
-              className="p-4 md:p-10"
-            >
+            <div className="p-4 md:p-10">
               <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <h3 className="text-xl md:text-3xl font-black text-white uppercase italic tracking-tighter">
@@ -561,17 +533,12 @@ export default function App() {
                   </Card>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Checkout Page --- */}
           {currentPage === 'checkout' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-4 md:p-10"
-            >
+            <div className="p-4 md:p-10">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10 overflow-x-auto pb-4 no-scrollbar">
                   {[
@@ -596,7 +563,7 @@ export default function App() {
                 </div>
 
                 {checkoutStep === 1 && (
-                  <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+                  <div>
                     <Card className="max-w-2xl px-5 py-6 md:p-8">
                       <div className="mb-6 md:mb-8">
                         <h3 className="text-lg md:text-xl font-bold text-white uppercase italic tracking-tight">Configuration</h3>
@@ -656,11 +623,11 @@ export default function App() {
                         </div>
                       </form>
                     </Card>
-                  </motion.div>
+                  </div>
                 )}
 
                 {checkoutStep === 2 && (
-                  <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+                  <div>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                       <div className="lg:col-span-2 space-y-4 md:space-y-6">
                         <Card className="px-5 py-6 md:p-8">
@@ -771,35 +738,27 @@ export default function App() {
                         </Card>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 {checkoutStep === 3 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 flex flex-col items-center">
+                  <div className="text-center py-20 flex flex-col items-center">
                     <div className="w-20 h-20 bg-brand-primary/10 border border-brand-primary/20 rounded-full flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                      >
+                      <div>
                         <ShieldCheck className="w-10 h-10 text-brand-primary" />
-                      </motion.div>
+                      </div>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-4 uppercase italic tracking-tight">Network Verification</h3>
                     <p className="text-slate-400 text-sm max-w-sm font-semibold uppercase tracking-tight">Our automated validator is scanning the blockchain for your transaction hash.</p>
-                  </motion.div>
+                  </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Success Page --- */}
           {currentPage === 'success' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              key="success"
-              className="p-4 md:p-10 flex items-center justify-center min-h-[60vh]"
-            >
+            <div className="p-4 md:p-10 flex items-center justify-center min-h-[60vh]">
               <Card className="max-w-md w-full text-center p-8 md:p-12 border-emerald-500/20">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                    <ShieldCheck className="w-6 h-6 md:w-8 md:h-8 text-white" />
@@ -813,17 +772,12 @@ export default function App() {
                   <Button variant="ghost" onClick={() => setCurrentPage('welcome')} className="w-full text-xs">Return Home</Button>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Auth Page --- */}
           {currentPage === 'auth' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-6 md:p-20 flex items-center justify-center min-h-[70vh]"
-            >
+            <div className="p-6 md:p-20 flex items-center justify-center min-h-[70vh]">
               <Card className="max-w-md w-full p-8 md:p-12 border-white/5 bg-brand-secondary">
                 <div className="text-center mb-10">
                   <Logo className="justify-center mb-6" />
@@ -887,16 +841,11 @@ export default function App() {
                   </p>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           )}
           {/* --- Dashboard Page --- */}
           {currentPage === 'dashboard' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              key="dashboard"
-              className="p-4 md:p-10"
-            >
+            <div className="p-4 md:p-10">
               {user && (
                 <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
                   <div>
@@ -1021,17 +970,12 @@ export default function App() {
                   </div>
                 </>
               )}
-            </motion.div>
+            </div>
           )}
 
           {/* --- FAQ Page --- */}
           {currentPage === 'faq' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="p-6 md:p-20 max-w-4xl mx-auto"
-            >
+            <div className="p-6 md:p-20 max-w-4xl mx-auto">
               <div className="text-center mb-16">
                 <h3 className="text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter mb-4">Knowledge Base</h3>
                 <p className="text-text-muted text-[10px] md:text-xs uppercase font-bold tracking-[0.2em]">Everything you need to know about trading with QXT FUNDED</p>
@@ -1049,17 +993,12 @@ export default function App() {
                   </Card>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* --- Privacy Page --- */}
           {currentPage === 'privacy' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-6 md:p-20 max-w-3xl mx-auto"
-            >
+            <div className="p-6 md:p-20 max-w-3xl mx-auto">
               <div className="mb-16">
                 <h3 className="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter mb-4">Legal & Compliance</h3>
                 <p className="text-text-muted text-[10px] uppercase font-bold tracking-[0.2em] border-b border-white/5 pb-8">Transparency and trust are our top priorities.</p>
@@ -1080,19 +1019,16 @@ export default function App() {
                   </div>
                 </section>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </main>
+        </main>
 
       <Footer />
 
       {/* Persistent global notification widget has been removed as per user request */}
-      <AnimatePresence>
-        {false && notification && (
-          <Notification message={notification} onClose={() => setNotification(null)} />
-        )}
-      </AnimatePresence>
+      {false && notification && (
+        <Notification message={notification} onClose={() => setNotification(null)} />
+      )}
 
       <div className="fixed bottom-6 left-6 z-40 hidden md:flex items-center gap-4">
         <a href={`mailto:${PLATFORM_CONFIG.supportEmail}`} className="w-14 h-14 bg-brand-primary rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 group">
